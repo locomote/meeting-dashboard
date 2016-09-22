@@ -1,155 +1,179 @@
 #!/usr/bin/env ruby
-require 'action_view'
-require 'json'
-require 'date'
+require 'her'
 
-# ----- replace with something better? ----
-ROBIN_API_TOKEN=ENV.fetch('ROBIN_API_TOKEN', 'l2CWtLjIh57qBj38gjVhkQuHEVX9MSbm8Ozxk4qWmK22KwevfUpMuBKBCQhBFI3o6S1r4toWFC6GjPCZMPudEh1SGRqc7CqjKGHA0GbuMwXthlI1fVXd1KRuJ0McJ0nh')
+# --- config ---
 ROBIN_URL=ENV.fetch('ROBIN_URL', 'https://api.robinpowered.com/v1.0')
-CACHE_MINUTES=ENV.fetch('CACHE_MINUTES', 1).to_i
-LOCATION_ID=ENV.fetch('LOCATION_ID', 3502).to_i
 
-ROBIN_CACHE_DIR=ENV.fetch('ROBIN_CACHE_DIR', '.cache')
-# TODO convert to ruby
-%x{[ -d "#{ROBIN_CACHE_DIR}" ] || mkdir -p "#{ROBIN_CACHE_DIR}"}
+ROBIN_ORGANIZATION=ENV.fetch('ROBIN_ORGANIZATION', 'locomote-queens-rd')
+ROBIN_API_TOKEN=ENV.fetch('ROBIN_API_TOKEN', 'l2CWtLjIh57qBj38gjVhkQuHEVX9MSbm8Ozxk4qWmK22KwevfUpMuBKBCQhBFI3o6S1r4toWFC6GjPCZMPudEh1SGRqc7CqjKGHA0GbuMwXthlI1fVXd1KRuJ0McJ0nh')
 
-
-def cache_key(path)
-  # TODO convert to ruby
-  "#{ROBIN_CACHE_DIR}/#{%x{echo "#{path}" | md5}.strip}"
-end
-
-def flush_cache(f)
-  # TODO convert to ruby
-  %x([ -e "#{f}" ] && find "#{f}" -mmin +"#{CACHE_MINUTES}" -exec rm {} \\;)
-end
-
-def get_from_cache(path)
-  f=cache_key(path)
-  flush_cache(f)
-  if File.exists?(f)
-    STDERR.puts "[cached from #{f} ...]" if ENV['DEBUG']
-  else
-    STDERR.puts "[caching to #{f} ...]" if ENV['DEBUG']
-    %x{curl --silent -H "Authorization: Access-Token #{ROBIN_API_TOKEN}" -X GET "#{ROBIN_URL}/#{path}" > "#{f}"}
+class RobinTokenAuthentication < Faraday::Middleware
+  def call(env)
+    env[:request_headers]["Authorization"] = "Access-Token #{ROBIN_API_TOKEN}"
+    @app.call(env)
   end
-  File.read(f)
 end
 
-def get(path)
-  get_from_cache path
+Her::API.setup url: ROBIN_URL do |c|
+  c.use RobinTokenAuthentication
+  c.use Faraday::Request::UrlEncoded
+  c.use Her::Middleware::JsonApiParser
+  c.use Faraday::Adapter::NetHttp
 end
-# ----- replace with something better? ----
+# --- config ---
 
 
+# --- models ---
+class User
+  # include Her::Model - hmmm.. fetching users doesn't seem to work
 
-class Invitee
-  def initialize(data)
-    @name = data["display_name"]
+  # {"id"=>98058970, "event_id"=>18748693, "user_id"=>nil, "email"=>"abugajewska@locomote.com", "display_name"=>"Aleksandra Bugajewska", "response_status"=>"accepted", "is_organizer"=>false, "is_resource"=>false, "updated_at"=>"2016-09-22T12:26:28+0000", "created_at"=>"2016-09-05T04:45:42+0000"}
+  ATTRIBUTES = %i{id display_name is_organizer email}
+  attr_reader(*ATTRIBUTES)
+  def initialize(attributes)
+    attributes.each do |attribute, value|
+      instance_variable_set("@#{attribute}", value)
+    end
   end
 
   def to_s
-    @name
+    "<User:#{id} #{display_name} #{is_organizer} #{email}>"
   end
 end
 
 class Event
-  include ActionView::Helpers::DateHelper
-  attr_reader :title, :invitees
+  include Her::Model
 
-  def initialize(data)
-    @started_at = DateTime.parse(data["started_at"])
-    @title = data["title"]
-    @invitees = data["invitees"].map { |invitee_data| Invitee.new(invitee_data) }
+  def invitees
+    @invitees = super.map do |invitee|
+      # hmmm... fetching users doesn't seem to work
+      # User.fetch(invitee[:id])
+      User.new(invitee)
+    end
   end
 
   def to_s
-    "  #{started_at} #{title} #{invitees.map(&:to_s).join(", ")}"
+    "#{started_at} [#{title}] #{description} #{invitees.join(", ")}"
+  end
+end
+
+class EventBlock
+  include Enumerable
+
+  attr_reader :from, :to, :events
+
+  def initialize(attributes)
+    @from = attributes[:from]
+    @to = attributes[:to]
+    @events = attributes[:events].map { |event_data| Event.find(event_data[:id]) }
   end
 
-  def started_at
-    time_ago_in_words(@started_at)
+  def each
+    events.each
+  end
+
+  def to_s
+    events.join(", ")
+  end
+end
+
+class EventBlocks
+  attr_reader :items
+
+  def initialize(items)
+    @items = items.map { |event_block| EventBlock.new(event_block) }
+  end
+
+  def to_s
+    items.empty? ? "<Free>" : items.join("\n")
   end
 end
 
 class Space
-  attr_reader :name, :id
+  include Her::Model
 
-  def initialize(data)
-    @name = data["name"]
-    @id = data["id"]
+  belongs_to :location
+  has_many :events
+
+  attr_reader :event_blocks
+
+  # TODO - Does *her* have a better way of doing this??
+  def events_upcoming
+    self.class.get_raw("spaces/#{id}/events/upcoming") do |parsed_data, response|
+      parsed_data[:data].map { |event_data| Event.new(event_data) }
+    end
   end
 
-  def self.each
-    JSON.parse(
-      get_from_cache "locations/#{LOCATION_ID}/spaces"
-    )["data"].map { |data| yield new(data) }
-  end
-
-  def upcoming_events
-    JSON.parse(
-      get_from_cache "spaces/#{id}/events?after=#{today}&before=#{tomorrow}"
-    )["data"].map { |data| Event.new(data) }
+  def busy=(event_blocks)
+    @event_blocks = EventBlocks.new(event_blocks)
   end
 
   def to_s
-    "#{name}\n#{upcoming_events.join("\n")}"
-  end
-
-  private
-
-  def today
-    @today ||= %x{date +%Y-%m-%d}.strip
-  end
-
-  def tomorrow
-    Date.parse(today) + 2
+    "#{id} : #{name} : #{event_blocks}"
   end
 end
 
-class BusySpace
-  attr_reader :name, :busy 
-  def initialize(space_data)
-    @name = space_data["space"]["name"]
-    @busy = space_data["busy"].count > 0
-  end 
+class Location
+  include Her::Model
 
-  def get_space
-    {name: @name, busy: @busy}
-  end
+  has_many :spaces
 
-end
-
-class FreeBusy
-  
-  def initialize
-    
-  end
-
-  def say_something
-    puts "say_something"
-  end
-
-  def self.get_busy
-      busy_data = JSON.parse (get_from_cache "free-busy/spaces?location_ids=#{LOCATION_ID}")
-      busy_hash = {}
-      busy_data["data"].each do |space_data|
-        busy_hash[space_data["space"]["name"]] = space_data["busy"].count == 0 ? "Empty" : "Busy"
+  def spaces_free_busy
+    self.class.get_raw("free-busy/spaces?location_ids=#{id}") do |parsed_data, response|
+      parsed_data[:data].map do |item|
+        Space.new(item[:space]).tap { |space| space.busy = item[:busy] }
       end
-      busy_hash
+    end
   end
 
-
+  def to_s
+    "#{id} : #{name}\n  #{spaces.join("\n  ")}"
+  end
 end
+
+class Organization
+  include Her::Model
+
+  has_many :locations
+end
+# --- models ---
+
+
+# --- helpers ---
+def organization
+  @organization ||= Organization.find(ROBIN_ORGANIZATION)
+end
+
+def location
+  @location ||= organization.locations.first
+end
+
+def spaces
+  location.spaces.inject({}) do |h, space|
+    h.update(space.name => space)
+  end
+end
+
+def vizzini
+  spaces['Vizzini']
+end
+
+def show_all
+  location.spaces.each do |space|
+    puts space
+    space.events_upcoming.each do |event|
+      puts event
+    end
+  end
+end
+# --- helpers ---
+
 
 if __FILE__ == $0
-  require 'table_print'
-  #Space.each do |space|
-  #  puts space
-  #end
-  puts FreeBusy.get_busy
-
-  
-  #puts fb.get_busy
-  
+#  show_all
+#  puts
+#  puts vizzini
+#  puts vizzini.events_upcoming
+#  puts
+  puts location.spaces_free_busy
 end
