@@ -19,11 +19,9 @@ Dashing.scheduler.every '5s' do
     Dashing.send_event(space.slug, { occupied_status: space.occupied_status })
   end
 
-#  Dashing.send_event('melbourne', { occupied_status: busy_spaces["Melbourne"].downcase ,  })
-#  Dashing.send_event('sanfrancisco', { occupied_status: busy_spaces["San Francisco"].downcase })
-#  Dashing.send_event('dubai', { occupied_status: busy_spaces["Dubai"].downcase})
-#  Dashing.send_event('vizzini', { occupied_status: busy_spaces["Vizzini"].downcase})
-
-
+#  Dashing.send_event('melbourne', { occupied_status: busy_spaces["Melbourne"].downcase , booker: "Tablet", start: "now"  })
+#  Dashing.send_event('sanfrancisco', { occupied_status: busy_spaces["San Francisco"].downcase, booker: "Tablet", start: "now"  })
+#  Dashing.send_event('dubai', { occupied_status: busy_spaces["Dubai"].downcase}, booker: "Tablet", start: "now")
+#  Dashing.send_event('vizzini', { occupied_status: busy_spaces["Vizzini"].downcase}, booker: "Tablet", start: "now")
 
 end
