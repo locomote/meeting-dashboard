@@ -84,8 +84,12 @@ class EventBlocks
     @items = items.map { |event_block| EventBlock.new(event_block) }
   end
 
+  def busy?
+    items.present?
+  end
+
   def to_s
-    items.empty? ? "<Free>" : items.join("\n")
+    busy? ? items.join("\n") : "<Free>"
   end
 end
 
@@ -106,6 +110,10 @@ class Space
 
   def busy=(event_blocks)
     @event_blocks = EventBlocks.new(event_blocks)
+  end
+
+  def busy?
+    event_blocks.busy?
   end
 
   def to_s
@@ -175,5 +183,8 @@ if __FILE__ == $0
 #  puts vizzini
 #  puts vizzini.events_upcoming
 #  puts
-  puts location.spaces_free_busy
+#  puts location.spaces_free_busy
+  location.spaces_free_busy.each do |space|
+    puts "#{space} #{space.busy?}"
+  end
 end

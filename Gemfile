@@ -32,7 +32,8 @@ gem 'jbuilder', '~> 2.5'
 
 gem 'dashing-rails'
 gem 'faraday'
-gem 'her'
+gem 'her', git: 'git@github.com:zkwentz/her.git', branch: 'feature/activemodel-5.0.x'
+
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
