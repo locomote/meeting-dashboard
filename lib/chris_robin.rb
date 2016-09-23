@@ -88,6 +88,10 @@ class EventBlocks
     items.present?
   end
 
+  def invitees
+    items.map(&:events).flatten.map(&:invitees)
+  end
+
   def to_s
     busy? ? items.join("\n") : "<Free>"
   end
@@ -101,6 +105,8 @@ class Space
 
   attr_reader :event_blocks
 
+  delegate :invitees, :busy?, to: :event_blocks
+
   # TODO - Does *her* have a better way of doing this??
   def events_upcoming
     self.class.get_raw("spaces/#{id}/events/upcoming") do |parsed_data, response|
@@ -112,8 +118,12 @@ class Space
     @event_blocks = EventBlocks.new(event_blocks)
   end
 
-  def busy?
-    event_blocks.busy?
+  def slug
+    @slug ||= name.gsub(" ", "").downcase
+  end
+
+  def occupied_status
+    busy? ? 'busy' : 'empty'
   end
 
   def to_s
