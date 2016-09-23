@@ -22,10 +22,11 @@ Dashing.scheduler.every '10s' do
   
 
 
-  Dashing.send_event('melbourne', { text: busy_spaces["Melbourne"]  })
-  Dashing.send_event('sanfrancisco', { text: busy_spaces["San Francisco"] })
-  Dashing.send_event('dubai', { text: busy_spaces["Dubai"]})
-  Dashing.send_event('vizzini', { text: busy_spaces["Vizzini"]})
+  Dashing.send_event('melbourne', { occupied_status: busy_spaces["Melbourne"].downcase ,  })
+  Dashing.send_event('sanfrancisco', { occupied_status: busy_spaces["San Francisco"].downcase })
+  Dashing.send_event('dubai', { occupied_status: busy_spaces["Dubai"].downcase})
+  Dashing.send_event('vizzini', { occupied_status: busy_spaces["Vizzini"].downcase})
+
 
 
 end
