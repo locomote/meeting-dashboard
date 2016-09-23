@@ -53,7 +53,7 @@ class Event
   end
 
   def to_s
-    "#{started_at} [#{title}] #{description} #{invitees.join(", ")}"
+    "#{started_at} [#{title}] #{description}\n     #{invitees.join("\n     ")}"
   end
 end
 
@@ -89,7 +89,11 @@ class EventBlocks
   end
 
   def invitees
-    items.map(&:events).flatten.map(&:invitees)
+    events.map(&:invitees)
+  end
+
+  def events
+    items.map(&:events).flatten
   end
 
   def to_s
@@ -118,6 +122,10 @@ class Space
     @event_blocks = EventBlocks.new(event_blocks)
   end
 
+  def busy_events
+    event_blocks.events
+  end
+
   def slug
     @slug ||= name.gsub(" ", "").downcase
   end
@@ -127,7 +135,7 @@ class Space
   end
 
   def to_s
-    "#{id} : #{name} : #{event_blocks}"
+    "#{id} : #{name} (#{occupied_status})\n  #{busy_events.join("\n")}"
   end
 end
 
@@ -194,7 +202,21 @@ if __FILE__ == $0
 #  puts vizzini.events_upcoming
 #  puts
 #  puts location.spaces_free_busy
+
+  require 'action_view'
+  extend ActionView::Helpers::DateHelper
+
   location.spaces_free_busy.each do |space|
-    puts "#{space} #{space.busy?}"
+    puts "#{space.name} (#{space.occupied_status})"
+    space.busy_events.each do |event|
+      puts "  [#{event.title}] started #{time_ago_in_words(event.started_at)} ago"
+      event.invitees.each do |invitee|
+        puts "    #{invitee.display_name}"
+      end
+    end
   end
+
+#  location.spaces.each do |space|
+#    puts "#{space} #{space.attributes}"
+#  end
 end
