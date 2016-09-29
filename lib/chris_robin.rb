@@ -5,7 +5,7 @@ require 'her'
 ROBIN_URL=ENV.fetch('ROBIN_URL', 'https://api.robinpowered.com/v1.0')
 
 ROBIN_ORGANIZATION=ENV.fetch('ROBIN_ORGANIZATION', 'locomote-queens-rd')
-ROBIN_API_TOKEN=ENV.fetch('ROBIN_API_TOKEN', 'l2CWtLjIh57qBj38gjVhkQuHEVX9MSbm8Ozxk4qWmK22KwevfUpMuBKBCQhBFI3o6S1r4toWFC6GjPCZMPudEh1SGRqc7CqjKGHA0GbuMwXthlI1fVXd1KRuJ0McJ0nh')
+ROBIN_API_TOKEN=ENV.fetch('ROBIN_API_TOKEN', 'aMpYUFmM7nGWJnXCKIX9oTA81OHmQRS4SjrEiVRU6iudV3xrWxT158fmOEFzG214sYvajULyuWdkF5Vv11cvTYqByIhcMe2Ftpy9wCnJ4y2zBWAwnHaMJnN8mfM4z5wg')
 
 class RobinTokenAuthentication < Faraday::Middleware
   def call(env)
@@ -126,6 +126,16 @@ class Space
     event_blocks.events
   end
 
+  def todays_events
+    #date_range = "spaces/#{id}/events/?after=#{DateTime.now.in_time_zone(Time.zone).beginning_of_day}&before=#{DateTime.now.in_time_zone(Time.zone).end_of_day}"
+    #date_range = "spaces/#{id}/events/?after=#{DateTime.now.yesterday}&before=#{DateTime.now.tomorrow}"
+    date_range = "spaces/#{id}/events/?after=#{Date.today}&before=#{Date.tomorrow}"
+    puts date_range
+    self.class.get_raw("#{date_range}&auto_created=false") do |parsed_data, response|
+      parsed_data[:data].map { |event_data| Event.new(event_data) }
+    end
+  end
+
   def slug
     @slug ||= name.gsub(" ", "").downcase
   end
@@ -208,13 +218,20 @@ if __FILE__ == $0
 
   location.spaces_free_busy.each do |space|
     puts "#{space.name} (#{space.occupied_status})"
-    space.busy_events.each do |event|
-      puts "  [#{event.title}] started #{time_ago_in_words(event.started_at)} ago"
-      event.invitees.each do |invitee|
-        puts "    #{invitee.display_name}"
-      end
+#    space.busy_events.each do |event|
+#      puts "  [#{event.title}] started #{time_ago_in_words(event.started_at)} ago"
+#      event.ended_at
+#      puts "  [#{event.title}] finishes #{event.ended_at.to_time.localtime}"
+#      event.invitees.each do |invitee|
+#        puts "    #{invitee.display_name}"
+#      end
+#    end
+    space.todays_events.each do |event|
+      puts " #{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
     end
+
   end
+
 
 #  location.spaces.each do |space|
 #    puts "#{space} #{space.attributes}"

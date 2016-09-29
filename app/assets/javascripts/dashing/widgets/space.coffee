@@ -12,6 +12,10 @@ class Dashing.Space extends Dashing.Widget
       when @get('occupied_status') == 'empty' then 'green'
       else 'green'
 
+    @set 'show_title', @get('event_title')
+    @set 'show_invitees', @get('invitees')
+
+
     @set 'status', status
 
     if status is 'error'

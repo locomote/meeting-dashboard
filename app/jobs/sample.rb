@@ -1,7 +1,7 @@
 current_valuation = 0
 
 require 'chris_robin'
-Dashing.scheduler.every '5s' do
+Dashing.scheduler.every '10s' do
 
 
   # curl -X GET https://api.robinpowered.com/v1.0/locations/3502/spaces -H "Authorization: Access-Token l2CWtLjIh57qBj38gjVhkQuHEVX9MSbm8Ozxk4qWmK22KwevfUpMuBKBCQhBFI3o6S1r4toWFC6GjPCZMPudEh1SGRqc7CqjKGHA0GbuMwXthlI1fVXd1KRuJ0McJ0nh"
@@ -16,12 +16,33 @@ Dashing.scheduler.every '5s' do
 
   location.spaces_free_busy.each do |space|
     puts "#{space} #{space.busy?} #{space.invitees}"
-    Dashing.send_event(space.slug, { occupied_status: space.occupied_status })
-  end
+    event_title = ""
+    invitees = ""
 
-#  Dashing.send_event('melbourne', { occupied_status: busy_spaces["Melbourne"].downcase , booker: "Tablet", start: "now"  })
-#  Dashing.send_event('sanfrancisco', { occupied_status: busy_spaces["San Francisco"].downcase, booker: "Tablet", start: "now"  })
-#  Dashing.send_event('dubai', { occupied_status: busy_spaces["Dubai"].downcase}, booker: "Tablet", start: "now")
-#  Dashing.send_event('vizzini', { occupied_status: busy_spaces["Vizzini"].downcase}, booker: "Tablet", start: "now")
+    
+    if space.busy_events.count > 0 
+      event = space.busy_events.first
+      event_title = event.title
+      invitees_a = []
+      end_time = "#{event.ended_at.to_time.localtime.to_s(:time)}"
+      puts end_time
+
+      event.invitees.each do |invitee|
+        invitees_a << invitee.display_name 
+      end
+       = invitees_a.to_sentence
+
+    end    
+    
+    event_list = ""
+    space.todays_events.each  do |event|  
+      event_list << "<p> #{event.title} #{event.started_at.to_time.localtime.to_s(:time)} - #{event.ended_at.to_time.localtime.to_s(:time)} </p>"
+    end
+
+    puts event_list
+
+    
+    Dashing.send_event(space.slug, { occupied_status: space.occupied_status, event_title: event_title, invitees: invitees, end_time: end_time  })
+  end
 
 end

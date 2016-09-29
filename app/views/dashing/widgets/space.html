@@ -2,9 +2,16 @@
 <ul>
     <li data-bind-class="status">
         <h1 class="title" data-bind="title"></h1>
-        <h2 data-bind="booker"></h2>
-        <p data-bind="start"></p> 
-        <p class="updated-at" data-bind="updatedAtMessage"></p>
-        
+
+        <div data-hideif="status | equals 'green'">
+          <div data-hideif="show_title | equals ''"> 
+            <div data-hideif="show_invitees | equals '' " >
+              <h2>Attendees</h2>
+              <p data-bind="invitees"></p>
+            </div> 
+          </div>
+          <p> Finish: <span data-bind="end_time"></span></p>
+        </div>
+        <p class="updated-at" data-bind="updatedAtMessage"></p>       
     </li>
 </ul>
