@@ -2,7 +2,6 @@
 <ul>
     <li data-bind-class="status">
         <h1 class="title" data-bind="title"></h1>
-
         <div data-hideif="status | equals 'green'">
           <div data-hideif="show_title | equals ''"> 
             <div data-hideif="show_invitees | equals '' " >
@@ -11,7 +10,23 @@
             </div> 
           </div>
           <p> Finish: <span data-bind="end_time"></span></p>
-        </div>
-        <p class="updated-at" data-bind="updatedAtMessage"></p>       
+        </div>  
+
+        <table>
+          <thead>
+           <tr data-foreach-hrow="hrows" data-bind-style="hrow.style" data-bind-class="hrow.class">
+              <th data-foreach-col="hrow.cols" data-bind-colspan="col.colspan" data-bind-rowspan="col.rowspan" data-bind-style="col.style" data-bind-class="col.class">
+                <span class="table-value" data-bind="col.value | raw"></span>
+              </th>
+            </tr>
+          </thead>
+           <tbody>
+            <tr data-foreach-row="rows" data-bind-style="row.style" data-bind-class="row.class">
+              <td data-bind="row.cols.start_time"></td>
+              <td data-bind="row.cols.end_time"></td>
+              <td data-bind="row.cols.title"></td>
+            </tr>
+          </tbody>
+        </table>
     </li>
 </ul>

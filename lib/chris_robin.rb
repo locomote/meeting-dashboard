@@ -126,10 +126,11 @@ class Space
     event_blocks.events
   end
 
-  def todays_events
+  def events_today
     #date_range = "spaces/#{id}/events/?after=#{DateTime.now.in_time_zone(Time.zone).beginning_of_day}&before=#{DateTime.now.in_time_zone(Time.zone).end_of_day}"
     #date_range = "spaces/#{id}/events/?after=#{DateTime.now.yesterday}&before=#{DateTime.now.tomorrow}"
-    date_range = "spaces/#{id}/events/?after=#{Date.today}&before=#{Date.tomorrow}"
+    date_range = "spaces/#{id}/events/?after=#{Date.today}T00%3A00%3A00%2B1000&before=#{Date.today+1}T00%3A00%3A00%2B1000"
+    #date_range = "spaces/#{id}/events/?after=#{Date.yesterday}&before=#{Date.tomorrow}"
     puts date_range
     self.class.get_raw("#{date_range}&auto_created=false") do |parsed_data, response|
       parsed_data[:data].map { |event_data| Event.new(event_data) }
@@ -226,8 +227,8 @@ if __FILE__ == $0
 #        puts "    #{invitee.display_name}"
 #      end
 #    end
-    space.todays_events.each do |event|
-      puts " #{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
+    space.events_today.each do |event|
+      puts "#{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
     end
 
   end
