@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 require 'her'
+require 'cgi'
+require 'matrix'
 
 # --- config ---
 ROBIN_URL=ENV.fetch('ROBIN_URL', 'https://api.robinpowered.com/v1.0')
@@ -50,6 +52,30 @@ class Event
       # User.fetch(invitee[:id])
       User.new(invitee)
     end
+  end
+
+  def to_occupancy
+    #puts "started: #{started_at}, ended: #{ended_at}"
+    start_time = started_at.to_time.localtime
+    end_time = ended_at.to_time.localtime
+    
+    occupancy_array = []
+    (480..1200).step(30) do |time_in_minutes|
+      occupancy_array << (occupied?(time_in_minutes/60, time_in_minutes%60) ? 1 : 0)
+    end
+    occupancy_array
+
+  end
+
+  def occupied?(hour, minute)
+    start_time = to_minutes(started_at.to_time.localtime.hour, started_at.to_time.min)
+    end_time = to_minutes(ended_at.to_time.localtime.hour, ended_at.to_time.min)
+    time = to_minutes(hour, minute)
+    time >= start_time and time < end_time
+  end  
+
+  def to_minutes(hour, minute)
+    hour * 60 + minute
   end
 
   def to_s
@@ -126,15 +152,33 @@ class Space
     event_blocks.events
   end
 
+
   def events_today
-    #date_range = "spaces/#{id}/events/?after=#{DateTime.now.in_time_zone(Time.zone).beginning_of_day}&before=#{DateTime.now.in_time_zone(Time.zone).end_of_day}"
-    #date_range = "spaces/#{id}/events/?after=#{DateTime.now.yesterday}&before=#{DateTime.now.tomorrow}"
-    date_range = "spaces/#{id}/events/?after=#{Date.today}T00%3A00%3A00%2B1000&before=#{Date.today+1}T00%3A00%3A00%2B1000"
-    #date_range = "spaces/#{id}/events/?after=#{Date.yesterday}&before=#{Date.tomorrow}"
-    puts date_range
+    now = Time.now
+    get_events(now.beginning_of_day, now.end_of_day)
+  end
+
+  def events_remaining
+    now = Time.now
+    get_events(now, now.end_of_day)
+  end
+
+  def get_events(start_time, end_time)
+    date_range = "spaces/#{id}/events/?after=#{robin_date(start_time)}&before=#{robin_date(end_time)}"
     self.class.get_raw("#{date_range}&auto_created=false") do |parsed_data, response|
       parsed_data[:data].map { |event_data| Event.new(event_data) }
     end
+  end
+
+  def get_occupancy
+    occ_events = events_today
+    occ_all_events = occ_events.map do |event|
+      event.to_occupancy
+    end
+    
+    
+    occ_all_events.map { |a| Vector[*a] }.inject(:+)
+
   end
 
   def slug
@@ -143,6 +187,11 @@ class Space
 
   def occupied_status
     busy? ? 'busy' : 'empty'
+  end
+
+
+  def robin_date (time)
+    CGI::escape(time.strftime("%Y-%m-%dT%H:%M:%S%z"))
   end
 
   def to_s
@@ -219,18 +268,24 @@ if __FILE__ == $0
 
   location.spaces_free_busy.each do |space|
     puts "#{space.name} (#{space.occupied_status})"
-#    space.busy_events.each do |event|
-#      puts "  [#{event.title}] started #{time_ago_in_words(event.started_at)} ago"
-#      event.ended_at
-#      puts "  [#{event.title}] finishes #{event.ended_at.to_time.localtime}"
-#      event.invitees.each do |invitee|
-#        puts "    #{invitee.display_name}"
-#      end
-#    end
+
+    space.events_remaining.each do |event|
+      puts "remaning #{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
+    end
     space.events_today.each do |event|
-      puts "#{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
+      puts "today #{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
+      
     end
 
+    h = space.get_occupancy.to_a.map do |x|
+      {class: x==1 ? "redbox" : "greenbox" , value: x}
+    end 
+    #space.slug
+
+    h.unshift ( {class: "title", value: space.slug }  )
+
+    puts "#{h}"
+     
   end
 
 
