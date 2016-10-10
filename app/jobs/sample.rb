@@ -1,7 +1,15 @@
+
+require 'net/http'
+require 'json'
+require 'cgi'
+
 current_valuation = 0
+server = "http://api.icndb.com"
+
+
 
 require 'chris_robin'
-Dashing.scheduler.every '30s' do
+Dashing.scheduler.every '120s' do
 
   location.spaces_free_busy.each do |space|
     event_title = ""
@@ -39,9 +47,7 @@ Dashing.scheduler.every '30s' do
                                      hrows: hrows })
   end
 
-
   rows = location.spaces_free_busy.map do |space|
-
     room = space.get_occupancy.to_a.map do |x|
       {class: x==1 ? "redbox" : "greenbox" , value: x}
     end 
@@ -50,21 +56,24 @@ Dashing.scheduler.every '30s' do
     { cols: room }
   end
 
-
   header = [ {value: "Time"}]
+  # 8am to 8pm
   (480..1200).step(30) do |time_in_minutes|
-      
-      header << {value: (time_in_minutes%60 == 0) ? "#{time_in_minutes/60}:00" : "" }
+      header << {value: "#{time_in_minutes/60}:#{(time_in_minutes%60 == 0) ? "00" : "30" }"}
   end
 
   hrow = [ { cols: header}  ]
-  puts "#{rows}"
-  puts "-------------"
-  puts "#{hrow}"
-
-
-
-  Dashing.send_event('schedule', { hrows: hrow, rows: rows } )
   
+  uri = URI("#{server}/jokes/random?limitTo=[nerdy]")
 
+
+  res = Net::HTTP.get(uri)
+  j = JSON[res]
+  #Get the joke
+  joke = CGI.unescapeHTML(j['value']['joke'])
+  puts joke
+
+  Dashing.send_event('schedule', { hrows: hrow, rows: rows, chuckfact: joke } )
+  
 end
+
