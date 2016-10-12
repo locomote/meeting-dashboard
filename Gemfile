@@ -32,7 +32,10 @@ gem 'jbuilder', '~> 2.5'
 
 gem 'dashing-rails'
 gem 'faraday'
-gem 'her', git: 'git@github.com:zkwentz/her.git', branch: 'feature/activemodel-5.0.x'
+#gem 'her', '0.8.1'
+#gem 'her', github: => 'git@github.com:zkwentz/her.git'
+gem 'her', git: 'git@github.com:spiritofprogress/her.git', branch: 'feature/activemodel-5.0.x'
+#gem 'client_side_validations', :github => 'Dakuan/client_side_validations'
 
 
 group :development, :test do
