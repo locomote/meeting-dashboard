@@ -60,7 +60,7 @@ class Event
     end_time = ended_at.to_time.localtime
     
     occupancy_array = []
-    (480..1200).step(30) do |time_in_minutes|
+    (480..1080).step(30) do |time_in_minutes|
       occupancy_array << (occupied?(time_in_minutes/60, time_in_minutes%60) ? 1 : 0)
     end
     occupancy_array
@@ -175,7 +175,7 @@ class Space
     occ_all_events = occ_events.map do |event|
       event.to_occupancy
     end
-    
+
     
     occ_all_events.map { |a| Vector[*a] }.inject(:+)
 

@@ -35,7 +35,7 @@ Dashing.scheduler.every '120s' do
       {cols: {title: event.title ,start_time: "#{event.started_at.to_time.localtime.to_s(:time)}", end_time: "#{event.ended_at.to_time.localtime.to_s(:time)}"}}      
     end
 
-    puts "#{events_remaining}"
+    #puts "#{events_remaining}"
 
     hrows = [
       { cols: [ {value: 'Start'}, {value: 'Finish'}, {value: 'Title'} ] }
@@ -58,7 +58,7 @@ Dashing.scheduler.every '120s' do
 
   header = [ {value: "Time"}]
   # 8am to 8pm
-  (480..1200).step(30) do |time_in_minutes|
+  (480..1080).step(30) do |time_in_minutes|
       header << {value: "#{time_in_minutes/60}:#{(time_in_minutes%60 == 0) ? "00" : "30" }"}
   end
 
@@ -71,7 +71,7 @@ Dashing.scheduler.every '120s' do
   j = JSON[res]
   #Get the joke
   joke = CGI.unescapeHTML(j['value']['joke'])
-  puts joke
+  #puts joke
 
   Dashing.send_event('schedule', { hrows: hrow, rows: rows, chuckfact: joke } )
   
