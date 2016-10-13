@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.0.0'
 # Use sqlite3 as the database for Active Record
-gem 'sqlite3'
+
 # Use Puma as the app server
 gem 'puma', '~> 3.0'
 # Use SCSS for stylesheets
@@ -34,13 +34,14 @@ gem 'dashing-rails'
 gem 'faraday'
 #gem 'her', '0.8.1'
 #gem 'her', github: => 'git@github.com:zkwentz/her.git'
-gem 'her', :git => 'https://github.com/spiritofprogress/her.git', branch: 'feature/activemodel-5.0.x'
+gem 'her', :git => 'https://github.com/zkwentz/her.git', branch: 'feature/activemodel-5.0.x'
 #gem 'client_side_validations', :github => 'Dakuan/client_side_validations'
 
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platform: :mri
+  gem 'sqlite3'
 end
 
 group :development do

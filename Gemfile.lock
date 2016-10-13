@@ -1,5 +1,5 @@
 GIT
-  remote: https://github.com/spiritofprogress/her.git
+  remote: https://github.com/zkwentz/her.git
   revision: 37dca2fe3981b41c6a979d082582b693dbecc792
   branch: feature/activemodel-5.0.x
   specs:
