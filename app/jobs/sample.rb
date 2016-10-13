@@ -71,7 +71,7 @@ Dashing.scheduler.every '120s' do
   j = JSON[res]
   #Get the joke
   joke = CGI.unescapeHTML(j['value']['joke'])
-  #puts joke
+  puts joke
 
   Dashing.send_event('schedule', { hrows: hrow, rows: rows, chuckfact: joke } )
   
