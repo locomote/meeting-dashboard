@@ -9,7 +9,7 @@ server = "http://api.icndb.com"
 
 
 require 'chris_robin'
-Dashing.scheduler.every '120s' do
+Dashing.scheduler.every '180s' do
 
   location.spaces_free_busy.each do |space|
     event_title = ""
@@ -49,7 +49,7 @@ Dashing.scheduler.every '120s' do
 
   rows = location.spaces_free_busy.map do |space|
     room = space.get_occupancy.to_a.map do |x|
-      {class: x==1 ? "redbox" : "greenbox" , value: x}
+      {class: x==1 ? "graybox" : "whitebox" , value: x}
     end 
     room.unshift ( {class: "title", value: space.name }  )
 

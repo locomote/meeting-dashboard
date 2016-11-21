@@ -1,8 +1,8 @@
 $background: #444;
 $text: #fff;
-$success: #86d751;
+$available: #008cd2;
 $warning: #edde43;
-$failure: #e3394f;
+$occupied: #e3394f;
 $error: #df42ff;
 
 
@@ -39,12 +39,12 @@ $error: #df42ff;
       font-size: 10px;
     }
 
-    &.green {
-      background-color: $success;
+    &.available {
+      background-color: $available;
 
       p {
         &.updated-at {
-          color: lighten($success, 20%);
+          color: lighten($available, 20%);
         }
       }
     }
@@ -59,12 +59,12 @@ $error: #df42ff;
       }
     }
 
-    &.red {
-      background-color: $failure;
+    &.occupied {
+      background-color: $occupied;
 
       p {
         &.updated-at {
-          color: lighten($failure, 20%);
+          color: lighten($occupied, 20%);
         }
       }
     }

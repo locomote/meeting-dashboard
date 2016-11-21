@@ -8,8 +8,8 @@ class Dashing.Space extends Dashing.Widget
   onData: (data) ->
 
     status = switch
-      when @get('occupied_status') == 'busy' then 'red'
-      when @get('occupied_status') == 'empty' then 'green'
+      when @get('occupied_status') == 'busy' then 'occupied'
+      when @get('occupied_status') == 'empty' then 'available'
       else 'green'
 
     @set 'show_title', @get('event_title')

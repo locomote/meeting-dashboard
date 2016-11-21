@@ -1,18 +1,18 @@
 # Use this hook to configure Dashing bahaviors.
 Dashing.configure do |config|
 
-  config.redis_host     = URI.parse(ENV["REDISTOGO_URL"]).host
-  config.redis_port     = URI.parse(ENV["REDISTOGO_URL"]).port
-  config.redis_password = URI.parse(ENV["REDISTOGO_URL"]).password
+  #config.redis_host     = URI.parse(ENV["REDISTOGO_URL"]).host
+  #config.redis_port     = URI.parse(ENV["REDISTOGO_URL"]).port
+  #config.redis_password = URI.parse(ENV["REDISTOGO_URL"]).password
   # Scheduler instance.
   # config.scheduler = ::Rufus::Scheduler.new
 
   # Redis credentials.
   # See https://devcenter.heroku.com/articles/redistogo to configure redis for heroku.
-  # config.redis_host     = '127.0.0.1'
-  # config.redis_port     = '6379'
-  # config.redis_password = nil
-  # config.redis_timeout  = 3
+  config.redis_host     = '127.0.0.1'
+  config.redis_port     = '6379'
+  config.redis_password = nil
+  config.redis_timeout  = 3
 
   # Redis namespace when pushing new data.
   # config.redis_namespace = 'dashing_events'

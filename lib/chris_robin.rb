@@ -29,7 +29,7 @@ end
 class User
   # include Her::Model - hmmm.. fetching users doesn't seem to work
 
-  # {"id"=>98058970, "event_id"=>18748693, "user_id"=>nil, "email"=>"abugajewska@locomote.com", "display_name"=>"Aleksandra Bugajewska", "response_status"=>"accepted", "is_organizer"=>false, "is_resource"=>false, "updated_at"=>"2016-09-22T12:26:28+0000", "created_at"=>"2016-09-05T04:45:42+0000"}
+ 
   ATTRIBUTES = %i{id display_name is_organizer email}
   attr_reader(*ATTRIBUTES)
   def initialize(attributes)
@@ -54,17 +54,16 @@ class Event
     end
   end
 
-  def to_occupancy
-    #puts "started: #{started_at}, ended: #{ended_at}"
-    start_time = started_at.to_time.localtime
-    end_time = ended_at.to_time.localtime
-    
+  def to_occupancy   
     occupancy_array = []
     (480..1080).step(30) do |time_in_minutes|
-      occupancy_array << (occupied?(time_in_minutes/60, time_in_minutes%60) ? 1 : 0)
+      begin
+        occupancy_array << (occupied?(time_in_minutes/60, time_in_minutes%60) ? 1 : 0)
+      rescue
+        occupancy_array << 0
+      end
     end
     occupancy_array
-
   end
 
   def occupied?(hour, minute)
@@ -171,14 +170,13 @@ class Space
   end
 
   def get_occupancy
+    
     occ_events = events_today
     occ_all_events = occ_events.map do |event|
       event.to_occupancy
     end
-
-    
+    occ_all_events << Event.new.to_occupancy
     occ_all_events.map { |a| Vector[*a] }.inject(:+)
-
   end
 
   def slug
@@ -270,15 +268,16 @@ if __FILE__ == $0
     puts "#{space.name} (#{space.occupied_status})"
 
     space.events_remaining.each do |event|
-      puts "remaning #{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
+      puts "remaining #{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
     end
     space.events_today.each do |event|
       puts "today #{event.title} #{event.started_at.to_time.localtime.to_formatted_s(:iso8601)}"
-      
     end
 
+    puts space.get_occupancy
+
     h = space.get_occupancy.to_a.map do |x|
-      {class: x==1 ? "redbox" : "greenbox" , value: x}
+      {class: x==1 ? "greybox" : "whitebox" , value: x}
     end 
     #space.slug
 
