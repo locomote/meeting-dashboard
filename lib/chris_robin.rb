@@ -57,16 +57,13 @@ class Event
   def to_occupancy   
     occupancy_array = []
     (480..1080).step(30) do |time_in_minutes|
-      begin
         occupancy_array << (occupied?(time_in_minutes/60, time_in_minutes%60) ? 1 : 0)
-      rescue
-        occupancy_array << 0
-      end
     end
     occupancy_array
   end
 
   def occupied?(hour, minute)
+    return false if started_at.nil?
     start_time = to_minutes(started_at.to_time.localtime.hour, started_at.to_time.min)
     end_time = to_minutes(ended_at.to_time.localtime.hour, ended_at.to_time.min)
     time = to_minutes(hour, minute)

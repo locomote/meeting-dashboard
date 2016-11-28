@@ -4,12 +4,12 @@ require 'json'
 require 'cgi'
 
 current_valuation = 0
-server = "http://api.icndb.com"
+SERVER = "http://api.icndb.com"
 
 
 
 require 'chris_robin'
-Dashing.scheduler.every '180s' do
+Dashing.scheduler.every '180s', :timeout => '40s' do
 
   location.spaces_free_busy.each do |space|
     event_title = ""
@@ -47,14 +47,17 @@ Dashing.scheduler.every '180s' do
                                      hrows: hrows })
   end
 
+  puts location.spaces_free_busy 
+
   rows = location.spaces_free_busy.map do |space|
     room = space.get_occupancy.to_a.map do |x|
       {class: x==1 ? "graybox" : "whitebox" , value: x}
     end 
     room.unshift ( {class: "title", value: space.name }  )
-
     { cols: room }
   end
+
+  rows = rows.sort {|r1,r2| r1[:cols].first[:value] <=> r2[:cols].first[:value]}
 
   header = [ {value: "Time"}]
   # 8am to 8pm
@@ -64,8 +67,7 @@ Dashing.scheduler.every '180s' do
 
   hrow = [ { cols: header}  ]
   
-  uri = URI("#{server}/jokes/random?limitTo=[nerdy]")
-
+  uri = URI("#{SERVER}/jokes/random?limitTo=[nerdy]")
 
   res = Net::HTTP.get(uri)
   j = JSON[res]
@@ -74,6 +76,6 @@ Dashing.scheduler.every '180s' do
   puts joke
 
   Dashing.send_event('schedule', { hrows: hrow, rows: rows, chuckfact: joke } )
-  
+
 end
 
