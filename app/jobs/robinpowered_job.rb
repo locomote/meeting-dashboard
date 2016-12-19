@@ -2,14 +2,13 @@
 require 'net/http'
 require 'json'
 require 'cgi'
+require 'robinpowered'
 
 current_valuation = 0
 SERVER = "http://api.icndb.com"
 
 
-
-require 'chris_robin'
-Dashing.scheduler.every '180s', :timeout => '40s' do
+Dashing.scheduler.every '60s', :timeout => '40s' do
 
   location.spaces_free_busy.each do |space|
     event_title = ""
@@ -28,11 +27,13 @@ Dashing.scheduler.every '180s', :timeout => '40s' do
     end    
     
     todaysevents = space.events_today.map  do |event|  
-      {cols: {title: event.title ,start_time: "#{event.started_at.to_time.localtime.to_s(:time)}", end_time: "#{event.ended_at.to_time.localtime.to_s(:time)}"}}      
+      {cols: {title: event.title ,start_time: "#{event.started_at.to_time.localtime.to_s(:time)}", 
+              end_time: "#{event.ended_at.to_time.localtime.to_s(:time)}"}}      
     end
 
     events_remaining = space.events_remaining.map  do |event|  
-      {cols: {title: event.title ,start_time: "#{event.started_at.to_time.localtime.to_s(:time)}", end_time: "#{event.ended_at.to_time.localtime.to_s(:time)}"}}      
+      {cols: {title: event.title ,start_time: "#{event.started_at.to_time.localtime.to_s(:time)}", 
+              end_time: "#{event.ended_at.to_time.localtime.to_s(:time)}"}}      
     end
 
     #puts "#{events_remaining}"
@@ -46,8 +47,6 @@ Dashing.scheduler.every '180s', :timeout => '40s' do
                                      rows: events_remaining, 
                                      hrows: hrows })
   end
-
-  puts location.spaces_free_busy 
 
   rows = location.spaces_free_busy.map do |space|
     room = space.get_occupancy.to_a.map do |x|
@@ -74,6 +73,7 @@ Dashing.scheduler.every '180s', :timeout => '40s' do
   #Get the joke
   joke = CGI.unescapeHTML(j['value']['joke'])
   puts joke
+  puts rows
 
   Dashing.send_event('schedule', { hrows: hrow, rows: rows, chuckfact: joke } )
 
