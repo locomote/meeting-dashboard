@@ -4,14 +4,14 @@ require 'cgi'
 require 'matrix'
 
 # --- config ---
-ROBIN_URL=ENV.fetch('ROBIN_URL', 'https://api.robinpowered.com/v1.0')
+ROBIN_URL = ENV.fetch('ROBIN_URL', 'https://api.robinpowered.com/v1.0')
 
-ROBIN_ORGANIZATION=ENV.fetch('ROBIN_ORGANIZATION', 'locomote-queens-rd')
-ROBIN_API_TOKEN=ENV.fetch('ROBIN_API_TOKEN', 'aMpYUFmM7nGWJnXCKIX9oTA81OHmQRS4SjrEiVRU6iudV3xrWxT158fmOEFzG214sYvajULyuWdkF5Vv11cvTYqByIhcMe2Ftpy9wCnJ4y2zBWAwnHaMJnN8mfM4z5wg')
+ROBIN_ORGANIZATION = ENV.fetch('ROBIN_ORGANIZATION', 'locomote-queens-rd')
+ROBIN_API_TOKEN = ENV.fetch('ROBIN_API_TOKEN', 'aMpYUFmM7nGWJnXCKIX9oTA81OHmQRS4SjrEiVRU6iudV3xrWxT158fmOEFzG214sYvajULyuWdkF5Vv11cvTYqByIhcMe2Ftpy9wCnJ4y2zBWAwnHaMJnN8mfM4z5wg')
 
 class RobinTokenAuthentication < Faraday::Middleware
   def call(env)
-    env[:request_headers]["Authorization"] = "Access-Token #{ROBIN_API_TOKEN}"
+    env[:request_headers]['Authorization'] = "Access-Token #{ROBIN_API_TOKEN}"
     @app.call(env)
   end
 end
@@ -24,13 +24,11 @@ Her::API.setup url: ROBIN_URL do |c|
 end
 # --- config ---
 
-
 # --- models ---
 class User
   # include Her::Model - hmmm.. fetching users doesn't seem to work
 
- 
-  ATTRIBUTES = %i{id display_name is_organizer email}
+  ATTRIBUTES = %i(id display_name is_organizer email).freeze
   attr_reader(*ATTRIBUTES)
   def initialize(attributes)
     attributes.each do |attribute, value|
@@ -54,10 +52,10 @@ class Event
     end
   end
 
-  def to_occupancy   
+  def to_occupancy
     occupancy_array = []
     (480..1080).step(30) do |time_in_minutes|
-        occupancy_array << (occupied?(time_in_minutes/60, time_in_minutes%60) ? 1 : 0)
+      occupancy_array << (occupied?(time_in_minutes / 60, time_in_minutes % 60) ? 1 : 0)
     end
     occupancy_array
   end
@@ -67,8 +65,8 @@ class Event
     start_time = to_minutes(started_at.to_time.localtime.hour, started_at.to_time.min)
     end_time = to_minutes(ended_at.to_time.localtime.hour, ended_at.to_time.min)
     time = to_minutes(hour, minute)
-    time >= start_time and time < end_time
-  end  
+    time >= start_time && time < end_time
+  end
 
   def to_minutes(hour, minute)
     hour * 60 + minute
@@ -95,7 +93,7 @@ class EventBlock
   end
 
   def to_s
-    events.join(", ")
+    events.join(', ')
   end
 end
 
@@ -119,7 +117,7 @@ class EventBlocks
   end
 
   def to_s
-    busy? ? items.join("\n") : "<Free>"
+    busy? ? items.join("\n") : '<Free>'
   end
 end
 
@@ -133,9 +131,9 @@ class Space
 
   delegate :invitees, :busy?, to: :event_blocks
 
-  # TODO - Does *her* have a better way of doing this??
+  # TODO: - Does *her* have a better way of doing this??
   def events_upcoming
-    self.class.get_raw("spaces/#{id}/events/upcoming") do |parsed_data, response|
+    self.class.get_raw("spaces/#{id}/events/upcoming") do |parsed_data, _response|
       parsed_data[:data].map { |event_data| Event.new(event_data) }
     end
   end
@@ -147,7 +145,6 @@ class Space
   def busy_events
     event_blocks.events
   end
-
 
   def events_today
     now = Time.now
@@ -161,32 +158,28 @@ class Space
 
   def get_events(start_time, end_time)
     date_range = "spaces/#{id}/events/?after=#{robin_date(start_time)}&before=#{robin_date(end_time)}"
-    self.class.get_raw("#{date_range}&auto_created=false") do |parsed_data, response|
+    self.class.get_raw("#{date_range}&auto_created=false") do |parsed_data, _response|
       parsed_data[:data].map { |event_data| Event.new(event_data) }
     end
   end
 
   def get_occupancy
-    
     occ_events = events_today
-    occ_all_events = occ_events.map do |event|
-      event.to_occupancy
-    end
+    occ_all_events = occ_events.map(&:to_occupancy)
     occ_all_events << Event.new.to_occupancy
     occ_all_events.map { |a| Vector[*a] }.inject(:+)
   end
 
   def slug
-    @slug ||= name.gsub(" ", "").downcase
+    @slug ||= name.delete(' ').downcase
   end
 
   def occupied_status
     busy? ? 'busy' : 'empty'
   end
 
-
-  def robin_date (time)
-    CGI::escape(time.strftime("%Y-%m-%dT%H:%M:%S%z"))
+  def robin_date(time)
+    CGI.escape(time.strftime('%Y-%m-%dT%H:%M:%S%z'))
   end
 
   def to_s
@@ -200,7 +193,7 @@ class Location
   has_many :spaces
 
   def spaces_free_busy
-    self.class.get_raw("free-busy/spaces?location_ids=#{id}") do |parsed_data, response|
+    self.class.get_raw("free-busy/spaces?location_ids=#{id}") do |parsed_data, _response|
       parsed_data[:data].map do |item|
         Space.new(item[:space]).tap { |space| space.busy = item[:busy] }
       end
@@ -218,7 +211,6 @@ class Organization
   has_many :locations
 end
 # --- models ---
-
 
 # --- helpers ---
 def organization
@@ -249,14 +241,13 @@ def show_all
 end
 # --- helpers ---
 
-
-if __FILE__ == $0
-#  show_all
-#  puts
-#  puts vizzini
-#  puts vizzini.events_upcoming
-#  puts
-#  puts location.spaces_free_busy
+if __FILE__ == $PROGRAM_NAME
+  #  show_all
+  #  puts
+  #  puts vizzini
+  #  puts vizzini.events_upcoming
+  #  puts
+  #  puts location.spaces_free_busy
 
   require 'action_view'
   extend ActionView::Helpers::DateHelper
@@ -274,18 +265,16 @@ if __FILE__ == $0
     puts space.get_occupancy
 
     h = space.get_occupancy.to_a.map do |x|
-      {class: x==1 ? "greybox" : "whitebox" , value: x}
-    end 
-    #space.slug
+      { class: x == 1 ? 'greybox' : 'whitebox', value: x }
+    end
+    # space.slug
 
-    h.unshift ( {class: "title", value: space.slug }  )
+    h.unshift ( { class: 'title', value: space.slug })
 
-    puts "#{h}"
-     
+    puts h.to_s
   end
 
-
-#  location.spaces.each do |space|
-#    puts "#{space} #{space.attributes}"
-#  end
+  #  location.spaces.each do |space|
+  #    puts "#{space} #{space.attributes}"
+  #  end
 end

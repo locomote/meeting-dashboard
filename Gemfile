@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-#ruby "2.3.1"
+# ruby "2.3.1"
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.0.0'
 
@@ -31,11 +31,10 @@ gem 'jbuilder', '~> 2.5'
 
 gem 'dashing-rails'
 gem 'faraday'
-#gem 'her', '0.8.1'
-#gem 'her', github: => 'git@github.com:zkwentz/her.git'
-gem 'her', :git => 'https://github.com/zkwentz/her.git', branch: 'feature/activemodel-5.0.x'
-#gem 'client_side_validations', :github => 'Dakuan/client_side_validations'
-
+gem 'her', '0.8.2'
+# gem 'her', github: => 'git@github.com:zkwentz/her.git'
+#gem 'her' #, git: 'https://github.com/zkwentz/her.git', branch: 'feature/activemodel-5.0.x'
+# gem 'client_side_validations', :github => 'Dakuan/client_side_validations'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
@@ -56,7 +55,6 @@ group :production do
   gem 'pg'
   gem 'rails_12factor'
 end
-
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]

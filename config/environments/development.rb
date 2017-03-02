@@ -1,5 +1,4 @@
 Rails.application.configure do
-
   config.assets.js_compressor = Uglifier.new(mangle: false)
 
   config.allow_concurrency = true
